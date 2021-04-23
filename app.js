@@ -2,6 +2,7 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 const ejs = require("ejs");
 const _ = require("lodash");
 
@@ -16,7 +17,22 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
+mongoose.connect("mongodb+srv://jbanuelos00:Sch00lP@ss@cluster0.jlgba.mongodb.net/firstblogDB?retryWrites=true&w=majority", { useNewUrlParser: true, useUnifiedTopology: true })
+
 let posts = [];
+
+const blogsSchema = new mongoose.Schema ({
+  title: {
+    type: String,
+    required: [true, 'Please give your blog a title!']
+  },
+  content: {
+    type: String,
+    required: [true, 'Do not leave without saying something...']
+  }
+});
+
+const Blog = mongoose.model("Blog", blogsSchema);
 
 app.get("/", function(req, res){
   res.render("home", {
@@ -38,12 +54,22 @@ app.get("/compose", function(req, res){
 });
 
 app.post("/compose", function(req, res){
-  const post = {
-    title: req.body.postTitle,
-    content: req.body.postBody
-  };
+  // const post = {
+  //   title: req.body.postTitle,
+  //   content: req.body.postBody
+  // };
 
-  posts.push(post);
+  const postTitle = req.body.postTitle;
+  const postBody = req.body.postBody;
+
+  const blog = new Blog ({
+    title: postTitle,
+    content: postBody
+  });
+
+  blog.save();
+
+  // posts.push(post);
 
   res.redirect("/");
 
