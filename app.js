@@ -19,9 +19,9 @@ app.use(express.static("public"));
 
 mongoose.connect("mongodb+srv://jbanuelos00:Sch00lP@ss@cluster0.jlgba.mongodb.net/firstblogDB?retryWrites=true&w=majority", { useNewUrlParser: true, useUnifiedTopology: true })
 
-let posts = [];
+// let posts = [];
 
-const blogsSchema = new mongoose.Schema ({
+const postSchema = new mongoose.Schema ({
   title: {
     type: String,
     required: [true, 'Please give your blog a title!']
@@ -32,13 +32,25 @@ const blogsSchema = new mongoose.Schema ({
   }
 });
 
-const Blog = mongoose.model("Blog", blogsSchema);
+const Post = mongoose.model("Post", postSchema);
 
 app.get("/", function(req, res){
-  res.render("home", {
-    startingContent: homeStartingContent,
-    posts: posts
-    });
+  // res.render("home", {
+  //   startingContent: homeStartingContent,
+  //   posts: posts
+  //   });
+
+  Post.find({}, function(err, posts) {
+    if(err) {
+      console.log(err)
+    } else {
+      res.render('home', {
+        startingContent: homeStartingContent,
+        posts: posts
+      });
+    }
+  })
+
 });
 
 app.get("/about", function(req, res){
@@ -59,35 +71,45 @@ app.post("/compose", function(req, res){
   //   content: req.body.postBody
   // };
 
-  const postTitle = req.body.postTitle;
-  const postBody = req.body.postBody;
-
-  const blog = new Blog ({
-    title: postTitle,
-    content: postBody
+  const post = new Post ({
+    title: req.body.postTitle,
+    content: req.body.postBody
   });
 
-  blog.save();
+  post.save(function(err) {
+    if(!err) {
+      res.redirect("/");
+    }
+  });
 
   // posts.push(post);
 
-  res.redirect("/");
 
 });
 
-app.get("/posts/:postName", function(req, res){
-  const requestedTitle = _.lowerCase(req.params.postName);
+app.get("/posts/:postId", function(req, res){
+  // const requestedTitle = _.lowerCase(req.params.postName);
 
-  posts.forEach(function(post){
-    const storedTitle = _.lowerCase(post.title);
+  const requestedPostId = req.params.postId;
 
-    if (storedTitle === requestedTitle) {
-      res.render("post", {
-        title: post.title,
-        content: post.content
-      });
-    }
+  Post.findOne({_id: requestedPostId}, function(err, post) {
+
+    res.render('post', {
+      title: post.title,
+      content: post.content
+    });
   });
+
+  // posts.forEach(function(post){
+  //   const storedTitle = _.lowerCase(post.title);
+  //
+  //   if (storedTitle === requestedTitle) {
+  //     res.render("post", {
+  //       title: post.title,
+  //       content: post.content
+  //     });
+  //   }
+  // });
 
 });
 
